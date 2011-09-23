@@ -21,3 +21,5 @@ Z-axis Stepper pins 10,12,11,13
 The order of the above pins matter because that is the order in which the coils have to be excited.
 
 There are currently no limit switches however this has been taken care of in the new software update being developed.
+
+PS : Ankur if you are reading this 2.5 2.5 

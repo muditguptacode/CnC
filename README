@@ -1,0 +1,23 @@
+##README##
+##Created 23/9/2011##
+By Mudit Gupta
+##ABOUT##
+The code was written in arduino IDE v0020 for Atmega8 @ 8Mhz
+Default arduino IDE does not have the board description for using an atmega8 @ 8MHZ refer http://todbot.com/blog/2009/05/26/minimal-arduino-with-atmega8/ on hgow to set up your IDE to work properly if you want to use an atmega 8(Or just use a regular arduino board).
+
+The code is currently in super-pre-alpha stage and is not fit for use by anyone who does not know his/her stuff.
+
+
+##HARDWARE DESCRIPTION##
+(again super-pre-alpha stage)
+The hardware for this cnc consists of an atmega8 and 3 L293D dual H-bridge chips. The chips are connected to 1 bipolar stepper motor each to control the X, Y, Z axes. The UART of the atmega is connected to a MAX232A TTL to RS232 (serial) chip to facillitate control and monitoring on the PC.
+
+Pin assignments
+
+X-axis Stepper pins 2,4,3,5
+Y-axis Stepper pins 6,8,7,9
+Z-axis Stepper pins 10,12,11,13
+
+The order of the above pins matter because that is the order in which the coils have to be excited.
+
+There are currently no limit switches however this has been taken care of in the new software update being developed.

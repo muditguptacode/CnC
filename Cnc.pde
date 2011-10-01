@@ -15,28 +15,30 @@ int curPosX,curPosY,curPosz;
 //Initialization function
 void initPos(int x =0, int y=0 , int z=0)
 {
-curPosX=0;
-curPosY=0;
-curPosz=0;
+  curPosX=0;
+  curPosY=0;
+  curPosz=0;
 }
 
 //This function moves head to an absolute target x,y position
 void seek(int tx, int ty)
 {
-int dx=abs(tx-curPosX);
-if(tx<curPosX)
+  int dx=abs(tx-curPosX);
+  if(tx<curPosX)
   {
-  dx=dx*-1;
+    dx=dx*-1;
   }
 
-int dy=abs(ty-curPosY);
-if(ty>curPosY)
+  int dy=abs(ty-curPosY);
+  if(ty>curPosY)
   {
-  dy=dy*-1;
+    dy=dy*-1;
   }
-SteppityStep(dx,dy,0); //Moves x,y but but leaves z unchanged
-curPosX=tx;
-curPosY=ty;
+  SteppityStep(dx,dy,0); //Moves x,y but but leaves z unchanged
+  curPosX=tx;
+  curPosY=ty;
+  //Serial.flush();
+  //Serial.println("Seek end");
 }
 
 //Function takes given number of steps in provided direction (+ or -)
@@ -79,12 +81,12 @@ void SteppityStep(int x, int y, int z)
   }
   for(j=0;j<i;j++)
   {
-    if(x!=0)
+    if(x!=0 && x<=250 && x>=-250 )
     {
       stepperX.step((-1)*signX);
       x=x+signX;
     }
-    if(y!=0)
+    if(y!=0 && y<=175 && y>=-175)
     {
       stepperY.step((-9)*signY); // Y-axis steps 9 times per x or z axis step to maintain synchronization
       y=y+signY;
@@ -98,17 +100,6 @@ void SteppityStep(int x, int y, int z)
 }
 
 
-
-
-void setup()
-{    
-  //These speeds don't mean anything right now
-  stepperX.setSpeed(50);
-  stepperY.setSpeed(200);
-  stepperZ.setSpeed(100);
-  Serial.begin(9600); //Serial initialization 
-  initPos();
-}
 //Following Pen commands correspond to the placement of the pen in my setup
 //Brings pen to a position just .5 cm above the paper to ensure fast penups and pendowns
 void PenPoise()
@@ -119,60 +110,122 @@ void PenPoise()
 //To be called after PenDOwn to raise pen to intermediate position
 void PenUp()
 {
-SteppityStep(0,0,-30);
+  SteppityStep(0,0,-30);
 }
 //Touches pen to paper
 void PenDown()
 {
-SteppityStep(0,0,25);
+  SteppityStep(0,0,9);
 }
 
+char chr;
+int first =1;
+void setup()
+{    
+  //These speeds don't mean anything right now
+  stepperX.setSpeed(50);
+  stepperY.setSpeed(200);
+  stepperZ.setSpeed(100);
+  Serial.begin(4800); //Serial initialization 
+  Serial.write("Ready for receiving commands...");
+  Serial.flush();
+  while(!Serial.available());
+  chr=Serial.read();
+  if(chr=='?')
+  {
+    Serial.print('r');
+  }
+  else
+  {
+    Serial.print(chr);
+  }
+  initPos();
+}
+int rx , ry, in , jk;
+char c;
+
+char arr[5];
 void loop()
 {
   
   PenPoise();
-  int i;
-  //Draw a circle using parametric equation for a circle
-  //Y-axis coordiantes are multiplied by a factor of 1.13 to compensate to elliptical error
-  //trignometric function accept value in rads therfore multiply degrees by 0.0174
-  for(i=0;i<360;i++)
+  //PenDown();
+  while(1)
   {
-    seek((100*cos(i*0.0174)),(100*sin(i*0.0174))*1.13);
-    Serial.println((100*cos(i*0.0174)));
-    Serial.print(" , ");
-    Serial.println((100*sin(i*0.0174))*1.13);
-    if(i==0)
-      {
-       PenDown();  
+    if(Serial.available())
+    {
+      c = Serial.read();
+      
+      if( c=='(')
+      {  
+        in=0;
+        for (jk=0;jk<5;jk++)
+        {
+          arr[jk]='\0';
+        }     
+       // Serial.println("arr = ");
+       // Serial.println(arr);
+       // Serial.println("//arr");
+        while(1)
+        {
+          while(!Serial.available());
+          c=Serial.read();
+          //Serial.println(c);
+
+          if(c==',')
+          {
+            goto out1;
+          }
+          arr[in++]=c;
+        }
+        out1:
+        rx=atoi(arr);
+        //Serial.println(arr);
+        in=0;
+        for (jk=0;jk<5;jk++)
+        {
+          arr[jk]='\0';
+        } 
+        while(1)
+        {
+          while(!Serial.available());
+          c=Serial.read();
+          //Serial.println(c);
+          
+          if(c==')')
+          {
+            goto out2;
+          }
+         // Serial.println(arr);
+          arr[in++]=c;
+        }
+        out2:  
+        ry=atoi(arr);
+        seek(rx,ry);
+        if(first==1)
+        {
+          PenDown();
+        }
+        Serial.flush();
+        //Serial.println(rx);
+        //Serial.println(ry);
+        Serial.print('n');
+        //Serial.flush();
+          
+        
       }
-  }
-  //draw an astroid inside the circle
-  for(i=0;i<360;i++)
-  {
-    seek(100*(pow(cos(i*0.0174),3)),100*(pow(sin(i*0.0174),3))*1.13);
-    if(i==0)
+      else
       {
-       PenDown();  
+     // Serial.println("no (, got instead");
+      //Serial.print(c);
+      Serial.flush();
+      
       }
+    }
   }
-  //wait and return to center
-  delay(3000);
-  PenUp();
-  seek(0,0);
-  delay(3000);
-  seek(-220,200);
-  //draw a sine wave
-  for(i=-220;i<220;i++)
-  {
-    seek(i,200+(25*sin(i*0.0174))*1.13);
-    if(i==-220)
-      {
-       PenDown();  
-      }
-  }
-  //wait and return to center
-  delay(3000);
-  PenUp();
-  seek(0,0);
-  while(1);
 }
+
+
+
+
+
